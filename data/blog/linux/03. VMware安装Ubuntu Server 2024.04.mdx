@@ -1,0 +1,137 @@
+---
+title: VMware安装Ubuntu Server 2024.04
+date: '2024-11-09'
+tags: ['Ubuntu', 'Linux']
+draft: false
+summary: VMware安装Ubuntu Server 2024.04
+---
+
+> 网络nat模式
+> VMware网络管理器查看nat模式网关 `192.168.59.2`
+> 选择自定义安装ubuntu64位后，启动虚拟机，之后过程全部选择默认
+> 镜像源设置为清华源 `http://mirrors.tuna.tsinghua.edu.cn/ubuntu/`
+
+
+
+## 1. 配置静态IP
+
+首先查看动态分配的ip
+```bash
+ip addr
+
+#输出
+root@wjl:/home/wjl# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 00:0c:29:9a:e0:a0 brd ff:ff:ff:ff:ff:ff
+    altname enp2s1
+    inet 192.168.59.128/24 brd 192.168.59.255 scope global ens33
+       valid_lft forever preferred_lft forever
+    inet6 fe80::20c:29ff:fe9a:e0a0/64 scope link
+       valid_lft forever preferred_lft forever
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:e4:5e:7e:9f brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:e4ff:fe5e:7e9f/64 scope link
+       valid_lft forever preferred_lft forever
+11: veth64ca35d@if10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default
+    link/ether d6:76:01:91:7b:0e brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::d476:1ff:fe91:7b0e/64 scope link
+       valid_lft forever preferred_lft forever
+15: veth4d3a090@if14: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default
+    link/ether a2:7b:31:1e:b8:d3 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    inet6 fe80::a07b:31ff:fe1e:b8d3/64 scope link
+       valid_lft forever preferred_lft forever
+21: veth1403400@if20: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default
+    link/ether 72:13:1f:c2:ce:5c brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    inet6 fe80::7013:1fff:fec2:ce5c/64 scope link
+       valid_lft forever preferred_lft forever
+```
+
+记住`ens33`的ip地址  
+
+打开`/etc/netplan/00-installer-config.yaml`文件配置静态ip
+
+```bash
+vim /etc/netplan/00-installer-config.yaml
+
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens33:
+      addresses:
+        - 192.168.59.128/24
+      nameservers:
+        addresses: [4.2.2.2,8.8.8.8]
+      routes:
+        - to: default
+          via: 192.168.59.2
+  version: 2
+  
+# 更改为
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens33:
+      addresses:
+        - 192.168.59.129/24
+      nameservers:
+        addresses: [4.2.2.2,8.8.8.8]
+      routes:
+        - to: default
+          via: 192.168.59.2
+  version: 2
+```
+
+### 详细解释
+
+1. **`network:`**
+   - 这是配置文件的根键，表示整个网络配置的开始。
+2. **`ethernets:`**
+   - 这个键表示配置以太网接口。你可以在这里定义多个以太网接口。
+3. **`ens33:`**
+   - 这是具体的以太网接口名称。`ens33` 是一个常见的网络接口名称，表示第一个以太网接口。
+4. **`addresses:`**
+   - 这个键定义了分配给该接口的 IP 地址和子网掩码。
+   - `- 192.168.59.129/24` 表示该接口的 IP 地址是 `192.168.59.129`，子网掩码是 `255.255.255.0`（即 `/24` 表示前 24 位是网络部分）。
+5. **`nameservers:`**
+   - 这个键定义了 DNS 服务器的地址。
+   - `addresses: [4.2.2.2, 8.8.8.8]` 表示使用两个 DNS 服务器：`4.2.2.2` 和 `8.8.8.8`。`4.2.2.2` 是 Level 3 的公共 DNS 服务器，`8.8.8.8` 是 Google 的公共 DNS 服务器。
+6. **`routes:`**
+   - 这个键定义了路由表条目。
+   - `- to: default` 表示这是一个默认路由。
+   - `via: 192.168.59.2` 表示默认路由的下一跳地址是 `192.168.59.2`，通常是你的网关地址。
+7. **`version: 2`**
+   - 这个键指定了 Netplan 配置文件的版本。`2` 是目前最常用的版本。
+
+退出编辑
+
+```bash
+sudo netplan apply
+```
+
+运行该命令使该配置生效
+
+测试
+
+```bash
+root@wjlong1128:/home/wjl# ping qq.com
+PING qq.com (113.108.81.189) 56(84) bytes of data.
+64 bytes from 113.108.81.189: icmp_seq=1 ttl=128 time=26.2 ms
+64 bytes from 113.108.81.189: icmp_seq=2 ttl=128 time=502 ms
+64 bytes from 113.108.81.189: icmp_seq=3 ttl=128 time=114 ms
+64 bytes from 113.108.81.189: icmp_seq=4 ttl=128 time=192 ms
+```
+
+
+
+## 2. 配置远程root连接
+
+[[02. ubuntu22.04允许远程root登录]]
+

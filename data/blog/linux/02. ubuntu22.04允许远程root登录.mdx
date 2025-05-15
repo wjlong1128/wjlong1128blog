@@ -1,0 +1,130 @@
+---
+title: ubuntu22.04允许远程root登录
+date: '2024-11-10'
+tags: ['Ubuntu', 'Linux']
+draft: false
+summary: ubuntu22.04允许远程root登录
+---
+
+## 修改 root 用户登录桌面权限
+
+### 一、设置 root 用户密码 (必须执行一次，可以和旧密码一样)
+
+使用如下命令设置 root 用户密码，执行命令后，依次输入当前登录用户密码，要设置的 root 密码，确认 root 密码
+
+### 二、注释如下两个文件的对应行
+
+文件为`/etc/pam.d/gdm-password`和`/etc/pam.d/gdm-autologin`，找到如下代码后在文件前面加入#注释，代码为
+
+```sh
+#!/bin/bash  
+   
+#set root password  
+sudo passwd root  
+   
+#notes Document content  
+sudo sed -i "s/.*root quiet_success$/#&/" /etc/pam.d/gdm-autologin  
+sudo sed -i "s/.*root quiet_success$/#&/" /etc/pam.d/gdm-password  
+   
+#modify profile  
+sudo sed -i 's/^mesg.*/tty -s \&\& mesg n \|\| true/' /root/.profile  
+   
+#install openssh  
+sudo apt install openssh-server  
+   
+#delay  
+sleep 1  
+   
+#modify conf  
+sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config  
+   
+#restart server  
+sudo systemctl restart ssh
+```
+
+`编辑文件代码如下`
+
+```sh
+sudo vim /etc/pam.d/gdm-autologin  
+sudo vim /etc/pam.d/gdm-password
+```
+### 三、修改 profile 文件
+
+修改`/root/.profile`文件，编辑代码如下
+
+`sudo vim /root/.profile`
+
+注释掉或者删除行
+
+`mesg n 2＞ /dev/null || true`
+
+插入新行
+
+`tty -s && mesg n || true`
+
+**注意：当没有执行第一步 “设置 root 用户密码” 时，`/root/.profile文件是不存在的所以对于新安装的系统来说，第一步是非常重要的。`**
+
+## 配置 root 用户的远程 ssh 连接
+
+### 一、安装 openssh
+
+使用如下命令安装 openssh
+
+`sudo apt install openssh-server`
+
+### 二、修改配置文件
+
+安装完成后修改配置文件 / etc/ssh/sshd_config，命令如下
+
+`sudo vim /etc/ssh/sshd_config`
+
+将
+
+` #PermitRootLogin prohibit-password`
+
+改成
+
+`PermitRootLogin yes`
+
+### 三、重启服务
+
+使用如下命令程序 ssh 服务
+
+`sudo systemctl restart ssh`
+
+### 四、测试
+
+使用如下命令测试是否能成功登录
+
+`ssh root@localhost`
+
+## 一键配置脚本
+
+以下是一键配置脚本，直接新建 rootlogin.sh 脚本文件，打开后把以下命令粘贴进去然后，运行脚本文件即可。
+
+```sh
+#!/bin/bash  
+   
+#set root password  
+sudo passwd root  
+   
+#notes Document content  
+sudo sed -i "s/.*root quiet_success$/#&/" /etc/pam.d/gdm-autologin  
+sudo sed -i "s/.*root quiet_success$/#&/" /etc/pam.d/gdm-password  
+   
+#modify profile  
+sudo sed -i 's/^mesg.*/tty -s \&\& mesg n \|\| true/' /root/.profile  
+   
+#install openssh  
+sudo apt install openssh-server  
+   
+#delay  
+sleep 1  
+   
+#modify conf  
+sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config  
+   
+#restart server  
+sudo systemctl restart ssh
+```
+

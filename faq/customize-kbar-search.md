@@ -26,12 +26,12 @@ export const SearchProvider = ({ children }) => {
             name: 'Homepage',
             keywords: '',
             shortcut: ['h', 'h'],
-            section: 'Home',
+            section: '主页',
             perform: () => router.push('/'),
           },
           {
             id: 'projects',
-            name: 'Projects',
+            name: '项目',
             keywords: '',
             shortcut: ['p'],
             section: 'Home',
@@ -43,7 +43,7 @@ export const SearchProvider = ({ children }) => {
             id: post.path,
             name: post.title,
             keywords: post?.summary || '',
-            section: 'Blog',
+            section: '博客',
             subtitle: post.tags.join(', '),
             perform: () => router.push('/' + post.path),
           }))
