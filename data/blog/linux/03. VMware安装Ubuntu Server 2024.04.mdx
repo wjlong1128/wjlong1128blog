@@ -11,11 +11,10 @@ summary: VMware安装Ubuntu Server 2024.04
 > 选择自定义安装ubuntu64位后，启动虚拟机，之后过程全部选择默认
 > 镜像源设置为清华源 `http://mirrors.tuna.tsinghua.edu.cn/ubuntu/`
 
-
-
 ## 1. 配置静态IP
 
 首先查看动态分配的ip
+
 ```bash
 ip addr
 
@@ -54,7 +53,7 @@ root@wjl:/home/wjl# ip addr
        valid_lft forever preferred_lft forever
 ```
 
-记住`ens33`的ip地址  
+记住`ens33`的ip地址
 
 打开`/etc/netplan/00-installer-config.yaml`文件配置静态ip
 
@@ -73,7 +72,7 @@ network:
         - to: default
           via: 192.168.59.2
   version: 2
-  
+
 # 更改为
 # This is the network config written by 'subiquity'
 network:
@@ -121,7 +120,7 @@ sudo netplan apply
 测试
 
 ```bash
-root@wjlong1128:/home/wjl# ping qq.com
+root@wjlong:/home/wjl# ping qq.com
 PING qq.com (113.108.81.189) 56(84) bytes of data.
 64 bytes from 113.108.81.189: icmp_seq=1 ttl=128 time=26.2 ms
 64 bytes from 113.108.81.189: icmp_seq=2 ttl=128 time=502 ms
@@ -129,9 +128,6 @@ PING qq.com (113.108.81.189) 56(84) bytes of data.
 64 bytes from 113.108.81.189: icmp_seq=4 ttl=128 time=192 ms
 ```
 
-
-
 ## 2. 配置远程root连接
 
 [[02. ubuntu22.04允许远程root登录]]
-

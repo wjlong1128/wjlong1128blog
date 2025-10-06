@@ -1,12 +1,12 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: `wjlong1128's Blog`,
-  author: 'wjlong1128',
-  headerTitle: `wjlong1128's Blog`,
-  description: '记录生活、学习等',
+  title: `wjlong.dev`,
+  author: 'wjlong',
+  headerTitle: `wjlong.dev`,
+  description: 'wjl Blog',
   language: 'zh-CN',
   theme: 'system', // system, dark or light
-  siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
+  siteUrl: 'https://wjlong.xin',
   // siteRepo: 'https://github.com/timlrx/tailwind-nextjs-starter-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   // socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
